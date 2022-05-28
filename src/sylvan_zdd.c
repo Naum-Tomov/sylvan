@@ -2113,3 +2113,84 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
     zdd_reader_end(arr);
     return 0;
 }
+
+
+/**
+ * ISOP algorithm as implemented in Cudd
+ * Given lower bound L and upper bound U as BDDs.
+ *
+ * if L == 0 return 0, 0
+ * if U == 1 return 1, 1
+ * if U == 0 or L == 1 abort
+ *
+ * check cache
+ *
+ * v := minvar(L, U)
+ * Lv, Lnv, Uv, Unv := cofactor(L, v), cofactor(U, v)
+ * 
+ * Lsub0 := and(Lnv, !Uv)
+ * Usub0 := Unv
+ * Lsub1 := and(Lv, !Unv)
+ * Usub1 := Uv
+ *
+ * Isub0, zddIsub0 := ISOP(Lsub0, Usub0)
+ * Isub1, zddIsub1 := ISOP(Lsub1, Usub1)
+ * 
+ * Lsuper0 := and(Lnv, !Isub0)
+ * Lsuper1 := and(Lv, !Isub1)
+ * Usuper0 := Unv
+ * Usuper1 := Uv
+ *
+ * Ld := or(Lsuper0, Lsuper1)
+ * Ud := and(Usuper0, Usuper1)
+ * Id, zddId := ISOP(Ld, Ud)
+ *
+ * x := ithvar(v)
+ * term0 := !v * Isub0
+ * term1 := v * Isub1
+ * sum := term0 + term1
+ * r := sum + Id
+ *
+ * y := makeZdds(v, zdd_Isub0, zdd_Isub1, zdd_Id)
+ *
+ * put in cache
+ *
+ * return r, y
+ */
+
+
+ MTBDD * zdd_isop(MTBDD L, MTBDD U, ZDD* zdd_res) {
+     if (L == mtbdd_false) {
+         if (zdd_res != NULL) *zdd_res = zdd_false;
+         return mtbdd_false;
+     }
+     if (U == mtbdd_true) {
+         if (zdd_res != NULL) *zdd_res = zdd_true;
+         return mtbdd_true;
+     }
+
+/* Check the cache. We store BDD and ZDD results for each recursive call. */
+
+    // Q: Should zdd getnode methods be used here? mtbdd makes more sense to me since L and U are bdds
+    const mtbddnode_t L_node = MTBDD_GETNODE(L);
+    const uint32_t L_var = mtbddnode_getvariable(L_node);
+    const mtbddnode_t U_node = MTBDD_GETNODE(U);
+    const uint32_t U_var = mtbddnode_getvariable(U_node);
+
+    uint32_t minvar = L_var < U_var ? L_var : U_var;
+
+    MTBDD Lnv = minvar < L_var ? L : mtbddnode_followlow(L, L_node);
+    MTBDD Lv = minvar < L_var ? mtbdd_false : mtbddnode_followhigh(L, L_node);
+    MTBDD Unv = minvar < U_var ? U : mtbddnode_followlow(U, U_node);
+    MTBDD Uv = minvar < U_var ? mtbdd_false : mtbddnode_followhigh(U, U_node);
+
+    MTBDD Lsub0, Lsub1, Usub0, Usub1;
+    Lsub0 = sylvan_and(Lnv, sylvan_not(Uv));
+    Usub0 = Unv;
+    Lsub1 = sylvan_and(Lv, sylvan_not(Unv));
+    Usub1 = Uv;
+
+    //make a new zdd?
+
+ }
+
