@@ -2191,6 +2191,42 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
     Usub1 = Uv;
 
     //make a new zdd?
+    // not sure if i should use the methods mtbdd_refs_spawn push pop sync because i am not sure how they work; there's a stack of bdds?
+
+    ZDD zddIsub0, zddIsub1;
+    MTBDD Isub0, Isub1;
+    Isub0 = zdd_isop(Lsub0, Usub0, &zddIsub0);
+    Isub1 = zdd_isop(Lsub1, Usub1, &zddIsub1);
+
+    MTBDD Lsuper0, Lsuper1, Usuper0, Usuper1;
+    Lsuper0 = sylvan_and(Lnv, sylvan_not(Isub0));
+    Lsuper1 = sylvan_and(Lv, sylvan_not(Isub1));
+    Usuper0 = Unv;
+    Usuper1 = Uv;
+
+    MTBDD Ld, Ud;
+    Ld = sylvan_or(Lsuper0, Lsuper1);
+    Ud = sylvan_and(Usuper0, Usuper1);
+    
+    MTBDD Id;
+    ZDD zddId;
+    Id = zdd_isop(Ld, Ud, &zddId);
+    
+    MTBDD x, term0, term1, sum;
+    x = ithvar(minvar);
+    term0 = sylvan_and(sylvan_not(x), Isub0);
+    term1 = sylvan_and(x, Isub1);
+    sum = sylvan_or(term0, term1);
+
+    MTBDD res;
+    res = sylvan_or(sum, Id);
+
+    // Can I just assume this works?
+    *zdd_res = makeZdds(x, zdd_Isub0, zdd_Isub1, zdd_Id)
+
+    //put the res and zdd res in cache 
+
+    return res;
 
  }
 
