@@ -681,6 +681,12 @@ void zdd_refs_spawn(Task *t);
  */
 ZDD zdd_refs_sync(ZDD mtbdd);
 
+
+/**
+* Return an irredundant sum of products given a lower and upper bound of as BDDs.
+*/
+MTBDD zdd_isop(MTBDD L, MTBDD U, ZDD* zdd_res);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
