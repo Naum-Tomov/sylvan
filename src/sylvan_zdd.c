@@ -2159,7 +2159,7 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
  */
 
 
- MTBDD * zdd_isop(MTBDD L, MTBDD U, ZDD* zdd_res) {
+ MTBDD zdd_isop(MTBDD L, MTBDD U, ZDD* zdd_res) {
      if (L == mtbdd_false) {
          if (zdd_res != NULL) *zdd_res = zdd_false;
          return mtbdd_false;
@@ -2213,6 +2213,8 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
     Id = zdd_isop(Ld, Ud, &zddId);
     
     MTBDD x, term0, term1, sum;
+
+    // error "implicit function declaration"
     x = ithvar(minvar);
     term0 = sylvan_and(sylvan_not(x), Isub0);
     term1 = sylvan_and(x, Isub1);
@@ -2222,7 +2224,8 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
     res = sylvan_or(sum, Id);
 
     // Can I just assume this works?
-    *zdd_res = makeZdds(x, zdd_Isub0, zdd_Isub1, zdd_Id)
+    // nope it throws an error "implicit function declaration"
+    *zdd_res = makeZdds(x, zddIsub0, zddIsub1, zddId);
 
     //put the res and zdd res in cache 
 
