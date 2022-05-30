@@ -2185,47 +2185,62 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
     MTBDD Uv = minvar < U_var ? mtbdd_false : mtbddnode_followhigh(U, U_node);
 
     MTBDD Lsub0, Lsub1, Usub0, Usub1;
-    Lsub0 = sylvan_and(Lnv, sylvan_not(Uv));
+    Lsub0 = mtbdd_refs_push(sylvan_and(Lnv, sylvan_not(Uv)));
     Usub0 = Unv;
-    Lsub1 = sylvan_and(Lv, sylvan_not(Unv));
+    Lsub1 = mtbdd_refs_push(sylvan_and(Lv, sylvan_not(Unv)));
     Usub1 = Uv;
 
     //make a new zdd?
     // not sure if i should use the methods mtbdd_refs_spawn push pop sync because i am not sure how they work; there's a stack of bdds?
 
-    ZDD zddIsub0, zddIsub1;
-    MTBDD Isub0, Isub1;
+    ZDD zddIsub0 = zdd_false, zddIsub1 = zdd_false;
+    zdd_refs_pushptr(&zddIsub0);
+    zdd_refs_pushptr(&zddIsub1);
+    MTBDD Isub0 = mtbdd_false, Isub1 = mtbdd_false;
+    mtbdd_refs_pushptr(&Isub0);
+    mtbdd_refs_pushptr(&Isub1);
     Isub0 = zdd_isop(Lsub0, Usub0, &zddIsub0);
     Isub1 = zdd_isop(Lsub1, Usub1, &zddIsub1);
 
-    MTBDD Lsuper0, Lsuper1, Usuper0, Usuper1;
+    MTBDD Lsuper0 = mtbdd_false, Lsuper1 = mtbdd_false, Usuper0 = mtbdd_false, Usuper1 = mtbdd_false;
+    mtbdd_refs_pushptr(&Lsuper0);
+    mtbdd_refs_pushptr(&Lsuper1);
+    mtbdd_refs_pushptr(&Usuper0);
+    mtbdd_refs_pushptr(&Usuper1);
     Lsuper0 = sylvan_and(Lnv, sylvan_not(Isub0));
     Lsuper1 = sylvan_and(Lv, sylvan_not(Isub1));
     Usuper0 = Unv;
     Usuper1 = Uv;
 
-    MTBDD Ld, Ud;
+    MTBDD Ld = mtbdd_false, Ud = mtbdd_false;
+    mtbdd_refs_pushptr(&Ld);
+    mtbdd_refs_pushptr(&Ud);
     Ld = sylvan_or(Lsuper0, Lsuper1);
     Ud = sylvan_and(Usuper0, Usuper1);
     
-    MTBDD Id;
-    ZDD zddId;
+    MTBDD Id = mtbdd_false;
+    mtbdd_refs_pushptr(&Id);
+    ZDD zddId = zdd_false;
+    zdd_refs_pushptr(&zddId);
     Id = zdd_isop(Ld, Ud, &zddId);
     
     MTBDD x, term0, term1, sum;
 
     // error "implicit function declaration"
-    x = ithvar(minvar);
-    term0 = sylvan_and(sylvan_not(x), Isub0);
-    term1 = sylvan_and(x, Isub1);
-    sum = sylvan_or(term0, term1);
+    x = mtbdd_makenode(minvar, Isub0, Isub1);
 
     MTBDD res;
-    res = sylvan_or(sum, Id);
+    res = sylvan_or(x, Id);
 
     // Can I just assume this works?
     // nope it throws an error "implicit function declaration"
-    *zdd_res = makeZdds(x, zddIsub0, zddIsub1, zddId);
+    ZDD z = zdd_makenode(2*minvar + 1, zddId, zddIsub0);
+    *zdd_res = zdd_makenode(2*minvar, z, zddIsub1);
+
+    zdd_refs_popptr(3);
+    mtbdd_refs_pop(2);
+    mtbdd_refs_popptr(9);
+
 
     //put the res and zdd res in cache 
 
