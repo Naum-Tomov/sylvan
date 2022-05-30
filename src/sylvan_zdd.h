@@ -208,6 +208,12 @@ ZDD zdd_cube(ZDD variables, uint8_t *values, ZDD leaf);
 TASK_DECL_4(ZDD, zdd_union_cube, ZDD, ZDD, uint8_t*, ZDD);
 #define zdd_union_cube(set, variables, values, leaf) RUN(zdd_union_cube, set, variables, values, leaf)
 
+
+/**
+* Return an irredundant sum of products given a lower and upper bound of as BDDs.
+*/
+MTBDD zdd_isop(MTBDD L, MTBDD U, ZDD* zdd_res);
+
 /**
  * Extend the domain of a ZDD, such that all new variables take the given value.
  * The given value can be 0 (always negative), 1 (always positive), 2 (always dontcare)
@@ -682,10 +688,6 @@ void zdd_refs_spawn(Task *t);
 ZDD zdd_refs_sync(ZDD mtbdd);
 
 
-/**
-* Return an irredundant sum of products given a lower and upper bound of as BDDs.
-*/
-MTBDD zdd_isop(MTBDD L, MTBDD U, ZDD* zdd_res);
 
 #ifdef __cplusplus
 }

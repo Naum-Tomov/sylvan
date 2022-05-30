@@ -2169,9 +2169,28 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
          return mtbdd_true;
      }
 
-/* Check the cache. We store BDD and ZDD results for each recursive call. */
 
-    // Q: Should zdd getnode methods be used here? mtbdd makes more sense to me since L and U are bdds
+    /**
+     * Test for garbage collection
+     */
+    sylvan_gc_test();
+
+    /**
+     * Count operation
+     */
+    sylvan_stats_count(ZDD_CLAUSE_ISOP);
+
+    /**
+     * Check the cache
+     */
+    MTBDD result;
+    ZDD zdd_result;
+    if (cache_get6(CACHE_ZDD_CLAUSE_ISOP, L, U, 0, 0, 0, &result, &zdd_result)) {
+        sylvan_stats_count(ZDD_CLAUSE_ISOP_CACHED);
+        if (zdd_res != NULL) *zdd_res = zdd_result;
+        return result;
+    }
+
     const mtbddnode_t L_node = MTBDD_GETNODE(L);
     const uint32_t L_var = mtbddnode_getvariable(L_node);
     const mtbddnode_t U_node = MTBDD_GETNODE(U);
@@ -2190,9 +2209,7 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
     Lsub1 = mtbdd_refs_push(sylvan_and(Lv, sylvan_not(Unv)));
     Usub1 = Uv;
 
-    //make a new zdd?
-    // not sure if i should use the methods mtbdd_refs_spawn push pop sync because i am not sure how they work; there's a stack of bdds?
-
+    
     ZDD zddIsub0 = zdd_false, zddIsub1 = zdd_false;
     zdd_refs_pushptr(&zddIsub0);
     zdd_refs_pushptr(&zddIsub1);
@@ -2226,14 +2243,9 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
     
     MTBDD x, term0, term1, sum;
 
-    // error "implicit function declaration"
     x = mtbdd_makenode(minvar, Isub0, Isub1);
-
-    MTBDD res;
     res = sylvan_or(x, Id);
 
-    // Can I just assume this works?
-    // nope it throws an error "implicit function declaration"
     ZDD z = zdd_makenode(2*minvar + 1, zddId, zddIsub0);
     *zdd_res = zdd_makenode(2*minvar, z, zddIsub1);
 
@@ -2241,6 +2253,13 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
     mtbdd_refs_pop(2);
     mtbdd_refs_popptr(9);
 
+
+    /**
+     * Put in cache
+     */
+    if (cache_put6(CACHE_ZDD_CLAUSE_ISOP, L, U, 0, 0, 0, res, zdd_res)) {
+        sylvan_stats_count(ZDD_CLAUSE_ISOP_CACHEDPUT);
+    }
 
     //put the res and zdd res in cache 
 
