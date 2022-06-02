@@ -2172,8 +2172,9 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
 
     /**
      * Test for garbage collection
+     * THIS CURRENTLY THROWS A LACE RELATED ERROR?
      */
-    sylvan_gc_test();
+    // sylvan_gc_test();
 
     /**
      * Count operation
@@ -2241,7 +2242,7 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
     zdd_refs_pushptr(&zddId);
     Id = zdd_isop(Ld, Ud, &zddId);
     
-    MTBDD x, term0, term1, sum;
+    MTBDD x, res;
 
     x = mtbdd_makenode(minvar, Isub0, Isub1);
     res = sylvan_or(x, Id);
@@ -2257,7 +2258,7 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
     /**
      * Put in cache
      */
-    if (cache_put6(CACHE_ZDD_CLAUSE_ISOP, L, U, 0, 0, 0, res, zdd_res)) {
+    if (cache_put6(CACHE_ZDD_CLAUSE_ISOP, L, U, 0, 0, 0, res, *zdd_res)) {
         sylvan_stats_count(ZDD_CLAUSE_ISOP_CACHEDPUT);
     }
 
