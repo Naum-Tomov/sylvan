@@ -642,6 +642,36 @@ TASK_0(int, test_zdd_exists)
 //     return 0;
 // }
 
+
+// make bdd = ab + !ab
+// run isop on bdd
+// confirm that bdd is only b
+
+
+// another possible test, if there is a reverse isop method would be
+// to make random BDDs and seeing if applying isop and then reverse-isop
+// results in the same BDD consistently
+
+
+TASK_0(int, test_zdd_isop)
+{
+    BDD a = sylvan_ithvar(1);
+    BDD b = sylvan_ithvar(2);
+
+    BDD a_and_b = sylvan_and(a, b);
+    BDD aNot_and_b = sylvan_and(sylvan_not(a), b);
+    BDD redundant_b = sylvan_or(a_and_b, aNot_and_b); // ab+a!b 
+    ZDD isop_zdd;
+    zdd_isop(redundant_b, redundant_b, &isop_zdd); // => should be just b
+    zddnode_t b_node = ZDD_GETNODE(isop_zdd);
+    
+    test_assert(zddnode_gethigh(b_node) == zdd_true); 
+    test_assert(zddnode_getlow(b_node) == zdd_false);
+
+    return 0;
+}
+
+
 TASK_0(int, test_zdd_read_write)
 {
     /**
@@ -711,6 +741,10 @@ TASK_0(int, runtests)
     // for (int k=0; k<test_iterations; k++) if (CALL(test_zdd_and_dom)) return 1;
     printf("test_zdd_read_write...\n");
     for (int k=0; k<test_iterations; k++) if (CALL(test_zdd_read_write)) return 1;
+
+    
+    printf("test_zdd_isop...\n");
+    if (CALL(test_zdd_isop)) return 1;
     // for (int k=0; k<test_iterations; k++) if (CALL(test_zdd_extend_domain)) return 1;
 
     return 0;
