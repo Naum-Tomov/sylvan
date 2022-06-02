@@ -2268,3 +2268,66 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
 
  }
 
+
+
+/**
+  Recursively generate a BDD from a ZDD cover (inverse isop)
+    First, get 3 cofactors of the ZDD = f1, f0, fd
+    Second, compute (recursive step) BDD = b1, b0, bd
+    Third, get T = b1+bd and E=b0+bd
+    Lastly, get ITE(v,T,E) where v is the top variable of the given zdd
+ */
+
+MTBDD make_bdd_from_cover(ZDD zdd) {
+
+     if (zdd == zdd_true) {
+         return mtbdd_true;
+     }
+     if (zdd == zdd_false) {
+         return mtbdd_false;
+     }
+    
+    // TODO: Check cache here  
+
+    ZDD f0, f1, fd;
+
+    // TODO: reference them and assign them values via a "zdd3cofactors" method
+
+    BDD b0, b1, bd;
+
+    b1 = make_bdd_from_cover(f1);
+    // ref b1
+    b0 = make_bdd_from_cover(f0);
+    // ref b0
+
+    // pop f0 and f1, no longer needed
+    BDD T, E;
+
+    if (bd != mtbdd_false) {
+        bd = make_bdd_from_cover(fd);
+        // ref bd and pop fd
+
+        T = sylvan_or(b1, bd);
+        // ref T and pop b1
+
+        E = sylvan_or(b0, bd);
+        // ref E and pop b0 and bd
+    }
+    else {
+        // pop fd
+        T1 = b1;
+        E = b0;
+    }
+
+    mtbddnode_t v = ZDD_GETNODE(zdd);
+
+    BDD res;
+
+
+    // Q: How to consider the variable ordering and v index being potentially too high
+    res = ZDD_ITE(v, T, E);
+
+    // ref res and pop T and E
+    // cache res and pop it
+    return res;
+ }

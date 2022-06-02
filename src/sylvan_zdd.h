@@ -215,6 +215,11 @@ TASK_DECL_4(ZDD, zdd_union_cube, ZDD, ZDD, uint8_t*, ZDD);
 MTBDD zdd_isop(MTBDD L, MTBDD U, ZDD* zdd_res);
 
 /**
+ * Return a BDD representation of a given cover; inverse of the isop function.
+ */
+MTBDD make_bdd_from_cover(ZDD zdd);
+
+/**
  * Extend the domain of a ZDD, such that all new variables take the given value.
  * The given value can be 0 (always negative), 1 (always positive), 2 (always dontcare)
  */
