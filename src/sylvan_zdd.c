@@ -2270,6 +2270,12 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
 
 
 
+void zdd_cofactors3(ZDD f, zddnode_t v, ZDD* f0, ZDD* f1, ZDD* fd)
+{
+    zddnode_t top = ZDD_GETNODE(f);
+}
+
+
 /**
   Recursively generate a BDD from a ZDD cover (inverse isop)
     First, get 3 cofactors of the ZDD = f1, f0, fd

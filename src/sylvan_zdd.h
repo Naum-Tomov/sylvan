@@ -220,6 +220,11 @@ MTBDD zdd_isop(MTBDD L, MTBDD U, ZDD* zdd_res);
 MTBDD make_bdd_from_cover(ZDD zdd);
 
 /**
+ * Compute the 3-way decomposition of a given zdd cover w.r.t given variable v.
+ */
+ void zdd_cofactors3(ZDD f, zddnode_t v, ZDD* f0, ZDD* f1, ZDD* fd);
+
+/**
  * Extend the domain of a ZDD, such that all new variables take the given value.
  * The given value can be 0 (always negative), 1 (always positive), 2 (always dontcare)
  */
