@@ -662,14 +662,37 @@ TASK_0(int, test_zdd_isop)
     BDD aNot_and_b = sylvan_and(sylvan_not(a), b);
     BDD redundant_b = sylvan_or(a_and_b, aNot_and_b); // ab+a!b 
     ZDD isop_zdd;
-    zdd_isop(redundant_b, redundant_b, &isop_zdd); // => should be just b
-    zddnode_t b_node = ZDD_GETNODE(isop_zdd);
-    
-    test_assert(zddnode_gethigh(b_node) == zdd_true); 
-    test_assert(zddnode_getlow(b_node) == zdd_false);
+    MTBDD res = zdd_isop(redundant_b, redundant_b, &isop_zdd); // => should be just b
+
+    int x = zdd_getvar(isop_zdd);
+    MTBDD remade_b = make_bdd_from_cover(isop_zdd);
+    test_assert(res == redundant_b);
+    test_assert(remade_b == redundant_b);
+    test_assert(x == 4);
+    test_assert(zdd_gethigh(isop_zdd) == zdd_true); 
+    test_assert(zdd_getlow(isop_zdd) == zdd_false);
+    return 0;
+}
+
+
+TASK_0(int, test_zdd_isop_and_reverse_isop)
+{
+    BDD bdd_dom = mtbdd_fromarray((uint32_t[]){0,1,2,3,4,5,6,7}, 8);
+    int count = rng(10,100);
+    for (int i=0; i<count; i++) {
+        uint8_t arr[8];
+        for (int j=0; j<8; j++) arr[j] = rng(0, 2);
+        BDD bdd_set = sylvan_cube(bdd_dom, arr);
+        ZDD isop_zdd;
+        zdd_isop(bdd_set, bdd_set, &isop_zdd);
+        MTBDD remade_bdd = make_bdd_from_cover(isop_zdd);
+        test_assert(remade_bdd == bdd_set);
+    }
 
     return 0;
 }
+
+
 
 
 TASK_0(int, test_zdd_read_write)
@@ -745,6 +768,10 @@ TASK_0(int, runtests)
     
     printf("test_zdd_isop...\n");
     if (CALL(test_zdd_isop)) return 1;
+
+    printf("test_zdd_isop_and_reverse_isop...\n");
+    for (int k=0; k<test_iterations; k++) if (CALL(test_zdd_isop_and_reverse_isop)) return 1;
+
     // for (int k=0; k<test_iterations; k++) if (CALL(test_zdd_extend_domain)) return 1;
 
     return 0;
