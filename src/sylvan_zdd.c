@@ -2270,12 +2270,6 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
 
 
 
-void zdd_cofactors3(ZDD f, zddnode_t v, ZDD* f0, ZDD* f1, ZDD* fd)
-{
-    zddnode_t top = ZDD_GETNODE(f);
-}
-
-
 /**
   Recursively generate a BDD from a ZDD cover (inverse isop)
     First, get 3 cofactors of the ZDD = f1, f0, fd
@@ -2293,47 +2287,87 @@ MTBDD make_bdd_from_cover(ZDD zdd) {
          return mtbdd_false;
      }
     
-    // TODO: Check cache here  
+    sylvan_stats_count(ZDD_MAKE_BDD_FROM_COVER);
+
+    /**
+     * Check the cache
+     */
+    MTBDD result;
+    if (cache_get3(CACHE_ZDD_REVERSE_ISOP, zdd, 0, 0, &result)) {
+        sylvan_stats_count(ZDD_MAKE_BDD_FROM_COVER_CACHED);
+        return result;
+    }
 
     ZDD f0, f1, fd;
 
-    // TODO: reference them and assign them values via a "zdd3cofactors" method
+    //const zddnode_t dd_node = ZDD_GETNODE(zdd);
+    uint32_t zdd_var = zdd_getvar(zdd);
+
+    if ((zdd_var % 2) == 0) {
+        f1 = zdd_gethigh(zdd);
+        ZDD zdd2 = zdd_getlow(zdd);
+        if (zdd2 == zdd_false) {
+            f0 = zdd_false;
+            fd = zdd_false;
+        } 
+        else if (zdd2 == zdd_true) {
+            f0 = zdd_false;
+            fd = zdd_true;
+        }
+        else {
+            uint32_t var2 = zdd_getvar(zdd2);
+            if (var2 == (zdd_var + 1)) {
+                f0 = zdd_gethigh(zdd2);
+                fd = zdd_getlow(zdd2);
+            }
+            else {
+                fd = zdd2;
+                f0 = zdd_false;
+            }
+        }
+    }
+    else {
+        f1 = zdd_false;
+        f0 = zdd_gethigh(zdd);
+        fd = zdd_getlow(zdd);
+    }
+
 
     BDD b0, b1, bd;
 
     b1 = make_bdd_from_cover(f1);
-    // ref b1
+    mtbdd_refs_pushptr(&b1);
+
     b0 = make_bdd_from_cover(f0);
-    // ref b0
+    mtbdd_refs_pushptr(&b1);
+
+    bd = make_bdd_from_cover(fd);
+    mtbdd_refs_pushptr(&bd);
 
     // pop f0 and f1, no longer needed
     BDD T, E;
 
     if (bd != mtbdd_false) {
-        bd = make_bdd_from_cover(fd);
-        // ref bd and pop fd
-
         T = sylvan_or(b1, bd);
-        // ref T and pop b1
-
         E = sylvan_or(b0, bd);
-        // ref E and pop b0 and bd
     }
     else {
-        // pop fd
-        T1 = b1;
+        T = b1;
         E = b0;
     }
+    mtbdd_refs_popptr(3); // pop b0,b1,bd
+    mtbdd_refs_pushptr(&T);
+    mtbdd_refs_pushptr(&E);
 
-    mtbddnode_t v = ZDD_GETNODE(zdd);
 
     BDD res;
+    res = mtbdd_makenode(zdd_var/2, E, T);
 
-
-    // Q: How to consider the variable ordering and v index being potentially too high
-    res = ZDD_ITE(v, T, E);
-
-    // ref res and pop T and E
-    // cache res and pop it
+    if (cache_put3(CACHE_ZDD_REVERSE_ISOP, zdd, 0, 0, res)) {
+        sylvan_stats_count(ZDD_MAKE_BDD_FROM_COVER_CACHEDPUT);
+    }
+    
+    
+    mtbdd_refs_popptr(2); // pop T,E
     return res;
  }

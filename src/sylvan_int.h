@@ -115,6 +115,7 @@ static const uint64_t CACHE_ZDD_DIFF                = (89LL<<40);
 static const uint64_t CACHE_ZDD_EXISTS              = (90LL<<40);
 static const uint64_t CACHE_ZDD_PROJECT             = (91LL<<40);
 static const uint64_t CACHE_ZDD_CLAUSE_ISOP         = (92LL<<40);
+static const uint64_t CACHE_ZDD_REVERSE_ISOP        = (93LL<<40);
 
 #ifdef __cplusplus
 }
