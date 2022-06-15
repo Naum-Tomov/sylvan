@@ -679,13 +679,33 @@ TASK_0(int, test_zdd_isop_and_reverse_isop)
 {
     BDD bdd_dom = mtbdd_fromarray((uint32_t[]){0,1,2,3,4,5,6,7}, 8);
     int count = rng(10,100);
+    BDD bdd_set = mtbdd_false;
+    mtbdd_protect(&bdd_set);
     for (int i=0; i<count; i++) {
-        uint8_t arr[8];
-        for (int j=0; j<8; j++) arr[j] = rng(0, 2);
-        BDD bdd_set = sylvan_cube(bdd_dom, arr);
+        bdd_set = mtbdd_false;
+        int new_count = rng(50,500);
+        for (int j=0; j<new_count; j++) {
+            uint8_t arr[8];
+            for (int j=0; j<8; j++) arr[j] = rng(0, 2);
+            bdd_set = sylvan_or(bdd_set, sylvan_cube(bdd_dom, arr));
+        }
         ZDD isop_zdd;
-        zdd_isop(bdd_set, bdd_set, &isop_zdd);
+        MTBDD isop_bdd = zdd_isop(bdd_set, bdd_set, &isop_zdd);
         MTBDD remade_bdd = make_bdd_from_cover(isop_zdd);
+        int arr[9];
+        ZDD res = zdd_cover_enum_first(isop_zdd, arr);
+        int count1 = 0;
+        while (res != zdd_false) {
+            res = zdd_cover_enum_next(isop_zdd, arr);
+            count1++;
+        }
+
+        double zdd_cubes = zdd_pathcount(isop_zdd);
+
+        // printf("%d %d %f\n", new_count, count1, zdd_cubes);
+        test_assert(count1 <= new_count);
+        test_assert(isop_bdd == bdd_set);
+        test_assert(count1 == zdd_cubes);
         test_assert(remade_bdd == bdd_set);
     }
 
@@ -769,8 +789,9 @@ TASK_0(int, runtests)
     printf("test_zdd_isop...\n");
     if (CALL(test_zdd_isop)) return 1;
 
+    // this next test is very expensive so we only want to run it 100 times
     printf("test_zdd_isop_and_reverse_isop...\n");
-    for (int k=0; k<test_iterations; k++) if (CALL(test_zdd_isop_and_reverse_isop)) return 1;
+    for (int k=0; k<(test_iterations/10); k++) if (CALL(test_zdd_isop_and_reverse_isop)) return 1;
 
     // for (int k=0; k<test_iterations; k++) if (CALL(test_zdd_extend_domain)) return 1;
 
