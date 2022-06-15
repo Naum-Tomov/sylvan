@@ -220,6 +220,15 @@ MTBDD zdd_isop(MTBDD L, MTBDD U, ZDD* zdd_res);
 MTBDD make_bdd_from_cover(ZDD zdd);
 
 
+
+/**
+ * Enumerate covers
+ * <arr> must be a sufficiently large pre-allocated array
+ */
+ZDD zdd_cover_enum_first(ZDD dd, int32_t *arr);
+ZDD zdd_cover_enum_next(ZDD dd, int32_t *arr);
+
+
 /**
  * Extend the domain of a ZDD, such that all new variables take the given value.
  * The given value can be 0 (always negative), 1 (always positive), 2 (always dontcare)

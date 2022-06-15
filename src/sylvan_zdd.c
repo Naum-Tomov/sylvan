@@ -2200,14 +2200,14 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
     uint32_t minvar = L_var < U_var ? L_var : U_var;
 
     MTBDD Lnv = minvar < L_var ? L : mtbddnode_followlow(L, L_node);
-    MTBDD Lv = minvar < L_var ? mtbdd_false : mtbddnode_followhigh(L, L_node);
+    MTBDD Lv = minvar < L_var ? L : mtbddnode_followhigh(L, L_node);
     MTBDD Unv = minvar < U_var ? U : mtbddnode_followlow(U, U_node);
-    MTBDD Uv = minvar < U_var ? mtbdd_false : mtbddnode_followhigh(U, U_node);
+    MTBDD Uv = minvar < U_var ? U : mtbddnode_followhigh(U, U_node);
 
     MTBDD Lsub0, Lsub1, Usub0, Usub1;
     Lsub0 = mtbdd_refs_push(sylvan_and(Lnv, sylvan_not(Uv)));
-    Usub0 = Unv;
     Lsub1 = mtbdd_refs_push(sylvan_and(Lv, sylvan_not(Unv)));
+    Usub0 = Unv;
     Usub1 = Uv;
 
     
@@ -2371,3 +2371,43 @@ MTBDD make_bdd_from_cover(ZDD zdd) {
     mtbdd_refs_popptr(2); // pop T,E
     return res;
  }
+
+
+ ZDD
+zdd_cover_enum_first(ZDD dd, int32_t *arr)
+{
+    if (dd == zdd_false) {
+        return zdd_false;
+    } else if (dd == zdd_true) {
+        *arr = -1;
+        return zdd_true;
+    } else {
+        const zddnode_t dd_node = ZDD_GETNODE(dd);
+        const uint32_t dd_var = zddnode_getvariable(dd_node);
+
+        ZDD res = zdd_cover_enum_first(zddnode_high(dd, dd_node), arr+1);
+        // this cannot return False; following high edges must always lead to zdd_true!
+        assert(res != zdd_false);
+
+        *arr = dd_var;
+        return res;
+    }
+}
+
+ZDD
+zdd_cover_enum_next(ZDD dd, int32_t *arr)
+{
+    if (dd == zdd_true) return zdd_false; // only find a leaf in enum_first
+
+    const zddnode_t dd_node = ZDD_GETNODE(dd);
+    const uint32_t dd_var = zddnode_getvariable(dd_node);
+
+    if (*arr == (int32_t) dd_var) {
+        // We followed this one previously
+        ZDD res = zdd_cover_enum_next(zddnode_high(dd, dd_node), arr+1);
+        if (res != zdd_false) return res;
+        else return zdd_cover_enum_first(zddnode_low(dd, dd_node), arr);
+    } else {
+        return zdd_cover_enum_next(zddnode_low(dd, dd_node), arr);
+    }
+}
