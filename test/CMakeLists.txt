@@ -14,7 +14,7 @@ target_compile_options(test_cxx PRIVATE -Wall -Wextra -Werror -Wno-deprecated)
 
 add_executable(test_zdd)
 target_sources(test_zdd PRIVATE test_zdd.c)
-target_link_libraries(test_zdd PRIVATE Sylvan::Sylvan)
+target_link_libraries(test_zdd PRIVATE sylvan::sylvan)
 target_compile_features(test_zdd PRIVATE c_std_11)
 target_compile_options(test_zdd PRIVATE -Wall -Wextra -Werror -Wno-deprecated)
 
