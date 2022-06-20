@@ -212,7 +212,8 @@ TASK_DECL_4(ZDD, zdd_union_cube, ZDD, ZDD, uint8_t*, ZDD);
 /**
 * Return an irredundant sum of products given a lower and upper bound of as BDDs.
 */
-MTBDD zdd_isop(MTBDD L, MTBDD U, ZDD* zdd_res);
+TASK_DECL_3(MTBDD, zdd_isop, MTBDD, MTBDD, ZDD*)
+#define zdd_isop(L, U, zdd_res) CALL(zdd_isop, L, U, zdd_res)
 
 /**
  * Return a BDD representation of a given cover; inverse of the isop function.

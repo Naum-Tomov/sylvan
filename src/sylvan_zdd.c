@@ -2159,7 +2159,8 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
  */
 
 
- MTBDD zdd_isop(MTBDD L, MTBDD U, ZDD* zdd_res) {
+TASK_IMPL_3(MTBDD, zdd_isop, MTBDD, L, MTBDD, U, ZDD*, zdd_res)
+{
      if (L == mtbdd_false) {
          if (zdd_res != NULL) *zdd_res = zdd_false;
          return mtbdd_false;
@@ -2174,7 +2175,7 @@ TASK_IMPL_3(int, zdd_reader_frombinary, FILE*, in, ZDD*, dds, int, count)
      * Test for garbage collection
      * THIS CURRENTLY THROWS A LACE RELATED ERROR?
      */
-    // sylvan_gc_test();
+    RUN(sylvan_gc);
 
     /**
      * Count operation
